@@ -21,7 +21,6 @@ def contains_none(data):
 
 def update_phone_pose_callback(msg):
     param = msg['param']
-    print(msg)
     if contains_none(param):
         print('Ignore Empty Message')
     if bpy.context.active_object:

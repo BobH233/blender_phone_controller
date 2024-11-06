@@ -7,6 +7,7 @@ from ws4py.server.wsgirefserver import WSGIServer, WebSocketWSGIRequestHandler
 from ws4py.server.wsgiutils import WebSocketWSGIApplication
 
 from .callbacks import cmd_callbacks
+import bpy
 
 wsserver = None
 sockets = []
@@ -39,6 +40,11 @@ def start_server(host, port):
     wsserver_thread = threading.Thread(target=wsserver.serve_forever)
     wsserver_thread.daemon = True
     wsserver_thread.start()
+    try:
+        bpy.app.timers.unregister(update_timer)
+    except:
+        pass
+    bpy.app.timers.register(update_timer)
     return True
 
 def stop_server():
