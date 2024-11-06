@@ -1,7 +1,8 @@
 document.addEventListener('DOMContentLoaded', function () {
     const statusDiv = document.getElementById('status');
     const requestPermissionBtn = document.getElementById('requestPermissionBtn');
-
+    const enableSendBtn = document.getElementById('enableSendBtn');
+    const disableSendBtn = document.getElementById('disableSendBtn');
     
     const wsPort = new URLSearchParams(window.location.search).get('wsport');
     const wsUrl = `wss://${window.location.hostname}:${window.location.port}`;
@@ -52,6 +53,8 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    let sending = true;
+
     function requestSensorAccess() {
         if (typeof DeviceMotionEvent.requestPermission === 'function' && typeof DeviceOrientationEvent.requestPermission === 'function') {
             // 请求陀螺仪和姿态传感器权限
@@ -65,6 +68,17 @@ document.addEventListener('DOMContentLoaded', function () {
                     window.addEventListener('devicemotion', handleMotion);
                     window.addEventListener('deviceorientation', handleOrientation);
                     requestPermissionBtn.style.display = 'none';
+                    disableSendBtn.style.display = 'inline-block';
+                    disableSendBtn.onclick = () => {
+                        sending = false;
+                        enableSendBtn.style.display = 'inline-block';
+                        disableSendBtn.style.display = 'none';
+                    }
+                    enableSendBtn.onclick = () => {
+                        sending = true;
+                        disableSendBtn.style.display = 'inline-block';
+                        enableSendBtn.style.display = 'none';
+                    }
                 } else {
                     statusDiv.textContent = '无法获取传感器权限！';
                 }
@@ -79,6 +93,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function handleMotion(event) {
+        if(!sending) return;
         const currentTimestamp = Date.now();
         if (currentTimestamp - lastMotionTimestamp >= fpsInterval) {
             lastMotionTimestamp = currentTimestamp;
@@ -103,17 +118,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             };
 
-            // fetch(reportUrl, {
-            //     method: 'POST',
-            //     headers: {
-            //         'Content-Type': 'application/json'
-            //     },
-            //     body: JSON.stringify(data)
-            // }).catch(console.error);
         }
     }
 
     function handleOrientation(event) {
+        if(!sending) return;
         const currentTimestamp = Date.now();
         if (currentTimestamp - lastOrientationTimestamp >= fpsInterval) {
             lastOrientationTimestamp = currentTimestamp;
@@ -128,13 +137,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 param: orientationData
             };
             ws.emit('json_data', JSON.stringify(data))
-            // fetch(reportUrl, {
-            //     method: 'POST',
-            //     headers: {
-            //         'Content-Type': 'application/json'
-            //     },
-            //     body: JSON.stringify(data)
-            // }).catch(console.error);
         }
     }
 
