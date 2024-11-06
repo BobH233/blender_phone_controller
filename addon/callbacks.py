@@ -14,10 +14,14 @@ def contains_none(data):
         for item in data:
             if contains_none(item):
                 return True
-    else:
+    else: 
         return data is None
     
     return False
+
+def try_insert_keyframe(obj: bpy.types.Object, data_path):
+    if bpy.context.screen.is_animation_playing and bpy.context.scene.tool_settings.use_keyframe_insert_auto:
+        obj.keyframe_insert(data_path=data_path, frame=bpy.context.scene.frame_current)
 
 def update_phone_pose_callback(msg):
     param = msg['param']
@@ -32,14 +36,13 @@ def update_phone_pose_callback(msg):
         beta_rad = math.radians(beta)
         gamma_rad = math.radians(gamma)
         R_z = Matrix.Rotation(alpha_rad, 4, 'Z')
-        # Rotation around X-axis (beta)
         R_x = Matrix.Rotation(beta_rad, 4, 'X')
-        # Rotation around Y-axis (gamma)
         R_y = Matrix.Rotation(gamma_rad, 4, 'Y')
         rotation_matrix = R_z @ R_x @ R_y
         rotation_quaternion = rotation_matrix.to_quaternion()
         obj.rotation_mode = 'QUATERNION'
         obj.rotation_quaternion = rotation_quaternion
+        try_insert_keyframe(obj, 'rotation_quaternion')
 
 def update_phone_acc_callback(msg):
     # print(msg)
