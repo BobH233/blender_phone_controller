@@ -2,10 +2,22 @@ from flask import Flask, send_from_directory, render_template_string, request
 import multiprocessing
 import time
 import os
+from ws4py.client.threadedclient import WebSocketClient
 
 multiprocessing.set_start_method("spawn", force=True)
 
 app = Flask(__name__, static_folder='../webui', template_folder='../webui')
+
+class MyWebSocketClient(WebSocketClient):
+    def opened(self):
+        print("Connection opened")
+
+    def closed(self, code, reason=None):
+        print("Connection closed, Code:", code, "Reason:", reason)
+
+    def received_message(self, message):
+        print("Received message:", message)
+
 
 # 定义 index 路由
 @app.route('/')
@@ -17,6 +29,28 @@ def index():
 @app.route('/<path:filename>')
 def serve_static(filename):
     return send_from_directory(app.static_folder, filename)
+
+ws_client = None
+
+# 兼容ws无法连接的问题
+@app.route('/ws_connect', methods=['POST'])
+def ws_connect():
+    global ws_client
+    data = request.get_json()
+    port = data['port']
+    ws_client = MyWebSocketClient(f'ws://127.0.0.1:{port}')
+    ws_client.connect()
+    return 'OK'
+
+# 兼容ws无法连接的问题
+@app.route('/ws_report', methods=['POST'])
+def ws_report():
+    global ws_client
+    if ws_client is None:
+        return 'Not connected'
+    data = request.get_data().decode('utf-8')
+    ws_client.send(data)
+    return 'OK'
 
 server_process = None
 server_port = None
@@ -35,7 +69,10 @@ def get_server_thread():
     return server_process
 
 def webui_thread(port):
-    app.run(host='0.0.0.0', port=port)
+    cert_path = os.path.join(os.path.dirname(__file__), '../addon/cert')
+    crt_path = os.path.join(cert_path, './myserver.crt')
+    key_path = os.path.join(cert_path, './myserver.key')
+    app.run(host='0.0.0.0', port=port, ssl_context=(crt_path, key_path))
 
 def start_server(port):
     global server_process, server_port

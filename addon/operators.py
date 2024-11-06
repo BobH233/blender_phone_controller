@@ -60,12 +60,12 @@ class BOBH_OT_start_webui_server(bpy.types.Operator):
 
     def execute(self, context):
         global qr_icon_preview
-        self.default_port = context.scene.default_web_port
+        self.default_port = int(context.scene.default_web_port)
         if not start_web_server(self.default_port):
             show_message_box(message='服务器已经启动', title='错误', icon='ERROR')
             return {'CANCELLED'}
         locip = get_local_ip()
-        url = f"http://{locip}:{self.default_port}"
+        url = f"https://{locip}:{self.default_port}/?wsport={context.scene.default_ws_port}"
         qr_path = generate_qr_code(url)
         qr_icon_preview.clear()
         qr_icon_preview.load('qr_image', qr_path, 'IMAGE')
