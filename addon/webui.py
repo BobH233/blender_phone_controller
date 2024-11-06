@@ -8,11 +8,17 @@ multiprocessing.set_start_method("spawn", force=True)
 
 app = Flask(__name__, static_folder='../webui', template_folder='../webui')
 
+ws_opened = False
+
 class MyWebSocketClient(WebSocketClient):
     def opened(self):
+        global ws_opened
+        ws_opened = True
         print("Connection opened")
 
     def closed(self, code, reason=None):
+        global ws_opened
+        ws_opened = False
         print("Connection closed, Code:", code, "Reason:", reason)
 
     def received_message(self, message):
@@ -35,7 +41,9 @@ ws_client = None
 # 兼容ws无法连接的问题
 @app.route('/ws_connect', methods=['POST'])
 def ws_connect():
-    global ws_client
+    global ws_client, ws_opened
+    if ws_opened:
+        return 'Already opened'
     data = request.get_json()
     port = data['port']
     ws_client = MyWebSocketClient(f'ws://127.0.0.1:{port}')

@@ -1,39 +1,14 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh">
 <head>
-    <title>Blender WebSocket</title>
-    <script>
-        var ws;
-
-        function startWebSocket() {
-            ws = new WebSocket('ws://0.0.0.0:5678/');
-            ws.onopen = function () {
-                console.log('WebSocket connection opened');
-                requestGyroscope();
-            };
-            ws.onmessage = function (event) {
-                console.log('Received:', event.data);
-            };
-        }
-
-        function requestGyroscope() {
-            if (window.DeviceOrientationEvent) {
-                window.addEventListener('deviceorientation', function(event) {
-                    var alpha = event.alpha;
-                    var beta = event.beta;
-                    var gamma = event.gamma;
-                    var data = JSON.stringify({ alpha: alpha, beta: beta, gamma: gamma });
-                    ws.send(data);
-                });
-            } else {
-                alert('Your device does not support gyroscope.');
-            }
-        }
-
-        window.onload = startWebSocket;
-    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blender Controller</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>Blender WebSocket Gyroscope</h1>
+    <div id="status">尝试连接WebSocket...</div>
+    <button id="requestPermissionBtn" style="display: none;">请求陀螺仪权限</button>
+    <script src="script.js"></script>
 </body>
 </html>
