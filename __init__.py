@@ -8,6 +8,14 @@ try:
 except Exception as e:
     print('Warning: Not in blender env!')
 
+bl_info = {
+    'name': 'blender_phone_controller',
+    'author': 'BobH',
+    'version': (0, 1, 0),
+    'blender': (3, 6, 0),
+    'description': 'Control blender animation with your phone',
+    'category': 'Import-Export'
+}
 
 def register_string_props():
     bpy.types.Scene.default_ws_ip = bpy.props.StringProperty(
