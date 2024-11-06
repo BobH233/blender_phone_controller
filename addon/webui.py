@@ -4,7 +4,7 @@ import time
 import os
 from ws4py.client.threadedclient import WebSocketClient
 
-multiprocessing.set_start_method("spawn", force=True)
+multiprocessing.set_start_method('spawn', force=True)
 
 app = Flask(__name__, static_folder='../webui', template_folder='../webui')
 
@@ -14,22 +14,22 @@ class MyWebSocketClient(WebSocketClient):
     def opened(self):
         global ws_opened
         ws_opened = True
-        print("Connection opened")
+        print('Connection opened')
 
     def closed(self, code, reason=None):
         global ws_opened
         ws_opened = False
-        print("Connection closed, Code:", code, "Reason:", reason)
+        print('Connection closed, Code:', code, 'Reason:', reason)
 
     def received_message(self, message):
-        print("Received message:", message)
+        print('Received message:', message)
 
 
 # 定义 index 路由
 @app.route('/')
 def index():
     index_path = os.path.join(os.path.dirname(__file__), '../webui/index.html')
-    return render_template_string(open(index_path, encoding="utf-8").read())
+    return render_template_string(open(index_path, encoding='utf-8').read())
 
 # 用于处理静态文件 (JS, CSS)
 @app.route('/<path:filename>')
