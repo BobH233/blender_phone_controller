@@ -1,4 +1,5 @@
 from flask import Flask, send_from_directory, render_template_string, request
+from flask_socketio import SocketIO
 import multiprocessing
 import time
 import os
@@ -7,6 +8,7 @@ from ws4py.client.threadedclient import WebSocketClient
 multiprocessing.set_start_method('spawn', force=True)
 
 app = Flask(__name__, static_folder='../webui', template_folder='../webui')
+socketio = SocketIO(app, cors_allowed_origins="*") 
 
 ws_opened = False
 
@@ -59,6 +61,22 @@ def ws_report():
     data = request.get_data().decode('utf-8')
     ws_client.send(data)
     return 'OK'
+
+@socketio.on('json_data')
+def handle_json_data(data):
+    global ws_client, ws_opened
+    if not ws_opened:
+        return
+    ws_client.send(data)
+
+@socketio.on('connect')
+def handle_connect():
+    print("客户端已连接")
+
+@socketio.on('disconnect')
+def handle_disconnect():
+    print("客户端已断开连接")
+
 
 server_process = None
 server_port = None

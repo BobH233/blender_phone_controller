@@ -67,11 +67,14 @@ def dispatch_cmd(msg_obj):
         raise Exception(f'No callback for cmd {msg_obj["cmd"]}')
 
 def update_timer():
+    msg_map = {}
     while not message_queue.empty():
         try:
             msg = message_queue.get()
             msg_obj = parse_message_json(msg)
-            dispatch_cmd(msg_obj)
+            msg_map[msg_obj['cmd']] = msg_obj
         except Exception as e:
             print('message parse error', e)
+    for msg_obj in msg_map.values():
+        dispatch_cmd(msg_obj)
     return 0.01

@@ -1,12 +1,34 @@
 document.addEventListener('DOMContentLoaded', function () {
     const statusDiv = document.getElementById('status');
     const requestPermissionBtn = document.getElementById('requestPermissionBtn');
+
     
     const wsPort = new URLSearchParams(window.location.search).get('wsport');
+    const wsUrl = `wss://${window.location.hostname}:${window.location.port}`;
     const connectUrl = './ws_connect';
     const reportUrl = './ws_report';
 
-    function connectWebSocket() {
+    let lastMotionTimestamp = 0;
+    let lastOrientationTimestamp = 0;
+    const fpsInterval = 1000 / 30;
+
+    let ws;
+    function connectWebSocket2() {
+        ws = io.connect(wsUrl, { transports: ['websocket'] });
+        ws.on('connect', () => {
+            statusDiv.textContent = 'WebSocket连接成功！';
+            requestPermissionBtn.style.display = 'inline-block';
+            requestPermissionBtn.addEventListener('click', requestSensorAccess);
+        })
+        ws.on('error', () => {
+            statusDiv.textContent = 'WebSocket转发服务器未启动！';
+            alert('WebSocket转发服务器未启动，请确保服务器正常运行。');
+            console.error('连接错误:', error);
+        })
+    }
+    
+
+    function connectWebSocket1() {
         fetch(connectUrl, {
             method: 'POST',
             headers: {
@@ -24,8 +46,8 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         })
         .catch(error => {
-            statusDiv.textContent = 'WebSocket服务器未启动！';
-            alert('WebSocket服务器未启动，请确保服务器正常运行。');
+            statusDiv.textContent = 'WebSocket接收服务器未启动！';
+            alert('WebSocket接收服务器未启动，请确保服务器正常运行。');
             console.error('连接错误:', error);
         });
     }
@@ -57,54 +79,65 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function handleMotion(event) {
-        const gyroData = {
-            x: event.rotationRate.alpha,
-            y: event.rotationRate.beta,
-            z: event.rotationRate.gamma
-        };
+        const currentTimestamp = Date.now();
+        if (currentTimestamp - lastMotionTimestamp >= fpsInterval) {
+            lastMotionTimestamp = currentTimestamp;
 
-        const accelData = {
-            x: event.accelerationIncludingGravity.x,
-            y: event.accelerationIncludingGravity.y,
-            z: event.accelerationIncludingGravity.z
-        };
+            const gyroData = {
+                x: event.rotationRate.alpha,
+                y: event.rotationRate.beta,
+                z: event.rotationRate.gamma
+            };
 
-        const data = {
-            cmd: 'update_phone_acc',
-            param: {
-                gyro: gyroData,
-                accel: accelData
-            }
-        };
+            const accelData = {
+                x: event.accelerationIncludingGravity.x,
+                y: event.accelerationIncludingGravity.y,
+                z: event.accelerationIncludingGravity.z
+            };
 
-        fetch(reportUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(data)
-        }).catch(console.error);
+            const data = {
+                cmd: 'update_phone_acc',
+                param: {
+                    gyro: gyroData,
+                    accel: accelData
+                }
+            };
+
+            // fetch(reportUrl, {
+            //     method: 'POST',
+            //     headers: {
+            //         'Content-Type': 'application/json'
+            //     },
+            //     body: JSON.stringify(data)
+            // }).catch(console.error);
+        }
     }
 
     function handleOrientation(event) {
-        const orientationData = {
-            alpha: event.alpha,
-            beta: event.beta,
-            gamma: event.gamma
-        };
-        const data = {
-            cmd: 'update_phone_pose',
-            param: orientationData
-        };
+        const currentTimestamp = Date.now();
+        if (currentTimestamp - lastOrientationTimestamp >= fpsInterval) {
+            lastOrientationTimestamp = currentTimestamp;
 
-        fetch(reportUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(data)
-        }).catch(console.error);
+            const orientationData = {
+                alpha: event.alpha,
+                beta: event.beta,
+                gamma: event.gamma
+            };
+            const data = {
+                cmd: 'update_phone_pose',
+                param: orientationData
+            };
+            ws.emit('json_data', JSON.stringify(data))
+            // fetch(reportUrl, {
+            //     method: 'POST',
+            //     headers: {
+            //         'Content-Type': 'application/json'
+            //     },
+            //     body: JSON.stringify(data)
+            // }).catch(console.error);
+        }
     }
 
-    connectWebSocket();
+    connectWebSocket1();
+    connectWebSocket2();
 });
