@@ -1,10 +1,11 @@
-
+blender_env = False
 try:
     import bpy
     from .addon.server import stop_server as stop_ws_server
     from .addon.webui import stop_server as stop_web_server
     from .addon.panel import BOBH_PT_main_panel
-    from .addon.operators import BOBH_OT_start_websocket_server,    BOBH_OT_stop_websocket_server, BOBH_OT_start_webui_server, BOBH_OT_stop_webui_server
+    from .addon.operators import BOBH_OT_start_websocket_server,    BOBH_OT_stop_websocket_server, BOBH_OT_start_webui_server, BOBH_OT_stop_webui_server, BOBH_OT_start_camera_control, BOBH_OT_stop_camera_control, BOBH_OT_reset_camera_pose
+    blender_env = True
 except Exception as e:
     print('Warning: Not in blender env!')
 
@@ -64,28 +65,48 @@ def register_enum_props():
         ],
         default='WebSetting'
     )
+    bpy.types.Scene.camera_control_orient = bpy.props.EnumProperty(
+        name='手机握持方向',
+        description='设定手机握持的方向',
+        items=[
+            ('Portrait', '竖向握持', '竖向握持设备', 'SORT_DESC', 0),
+            ('Landscape_1', '横向握持(正)', '横向握持设备', 'FORWARD', 1),
+            ('Landscape_2', '横向握持(反)', '横向反方向握持设备', 'BACK', 2),
+        ],
+        default='Landscape_1'
+    )
+    bpy.types.Scene.record_camera_keyframe = bpy.props.BoolProperty(name="录制摄像机关键帧", default=False)
+
 
 def unregister_enum_props():
     del bpy.types.Scene.work_mode_option
     del bpy.types.Scene.input_control_option
+    del bpy.types.Scene.camera_control_orient
+    del bpy.types.Scene.record_camera_keyframe
+
+if blender_env:
+    my_classes = [
+        BOBH_PT_main_panel,
+        BOBH_OT_start_websocket_server,
+        BOBH_OT_stop_websocket_server,
+        BOBH_OT_start_webui_server,
+        BOBH_OT_stop_webui_server,
+        BOBH_OT_start_camera_control,
+        BOBH_OT_stop_camera_control,
+        BOBH_OT_reset_camera_pose,
+    ]
 
 def register():
     # 注册所有的 class 和属性
-    bpy.utils.register_class(BOBH_PT_main_panel)
-    bpy.utils.register_class(BOBH_OT_start_websocket_server)
-    bpy.utils.register_class(BOBH_OT_stop_websocket_server)
-    bpy.utils.register_class(BOBH_OT_start_webui_server)
-    bpy.utils.register_class(BOBH_OT_stop_webui_server)
+    for cls in my_classes:
+        bpy.utils.register_class(cls)
     register_string_props()
     register_enum_props()
 
 def unregister():
     # 注销所有的 class 和属性
-    bpy.utils.unregister_class(BOBH_PT_main_panel)
-    bpy.utils.unregister_class(BOBH_OT_start_websocket_server)
-    bpy.utils.unregister_class(BOBH_OT_stop_websocket_server)
-    bpy.utils.unregister_class(BOBH_OT_start_webui_server)
-    bpy.utils.unregister_class(BOBH_OT_stop_webui_server)
+    for cls in my_classes:
+        bpy.utils.unregister_class(cls)
     unregister_string_props()
     unregister_enum_props()
     stop_ws_server()

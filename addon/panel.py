@@ -13,8 +13,28 @@ class BOBH_PT_main_panel(bpy.types.Panel):
     bl_idname = 'BOBH_PT_blender_phone_controller'
 
     def camera_control_sub_panel(self, context, layout):
+        scene = context.scene
+
         row = layout.row()
-        row.label(text='摄像机控制')
+        row.label(text='请举起手机，然后按下快捷键或者点击下面按钮开始控制')
+        row = layout.row()
+        
+        selected_objects = bpy.context.selected_objects
+        if len(selected_objects) == 1 and selected_objects[0].type == 'CAMERA':
+            row.label(text=f'当前控制摄像机: {selected_objects[0].name}', icon='OUTLINER_OB_CAMERA')
+        else:
+            row.label(text=f'没有选中受控摄像机', icon='OUTLINER_OB_CAMERA')
+
+        row = layout.row()
+        row.operator('bobh.start_camera_control', text='开始控制摄像机')
+        row.operator('bobh.stop_camera_control', text='停止控制摄像机')
+        row = layout.row()
+        row.operator('bobh.reset_camera_pose', text='重置摄像机姿态')
+        row = layout.row()
+        row.prop(scene, 'record_camera_keyframe', text='录制摄像机关键帧')
+        row = layout.row()
+        row.prop(scene, 'camera_control_orient', expand=False)
+
 
     def armature_control_sub_panel(self, context, layout):
         row = layout.row()
@@ -39,7 +59,7 @@ class BOBH_PT_main_panel(bpy.types.Panel):
     def control_input_web_sub_panel(self, context, layout):
         qr_icon_preview = get_qr_icon_preview()
         scene = context.scene
-        
+
         row = layout.row()
         row.prop(scene, 'default_web_port')
         row = layout.row()
@@ -54,11 +74,11 @@ class BOBH_PT_main_panel(bpy.types.Panel):
 
     def control_input_app_sub_panel(self, context, layout):
         row = layout.row()
-        row.label(text='app设定')
+        row.label(text='app设定正在开发...')
 
     def control_input_joystick_sub_panel(self, context, layout):
         row = layout.row()
-        row.label(text='手柄设定')
+        row.label(text='手柄设定正在开发...')
 
     def draw(self, context):
         layout = self.layout

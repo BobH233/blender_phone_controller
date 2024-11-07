@@ -11,7 +11,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
     let lastMotionTimestamp = 0;
     let lastOrientationTimestamp = 0;
-    const fpsInterval = 1000 / 30;
+    const fpsInterval = 1000 / 60;
+
+    
+    let fake_alpha = 0;
+    let fake_beta = 0;
+    let fake_gamma = 0;
 
     let ws;
     function connectWebSocket2() {
@@ -73,6 +78,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         sending = false;
                         enableSendBtn.style.display = 'inline-block';
                         disableSendBtn.style.display = 'none';
+                        fake_alpha = fake_beta = fake_gamma = 0;
                     }
                     enableSendBtn.onclick = () => {
                         sending = true;
@@ -92,9 +98,26 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    let last_integral_time = 0;
+
     function handleMotion(event) {
         if(!sending) return;
         const currentTimestamp = Date.now();
+        if (last_integral_time == 0) {
+            last_integral_time = currentTimestamp;
+        } else {
+            let delta_time = currentTimestamp -last_integral_time;
+            if (delta_time > 500) {
+                // timeout
+                last_integral_time = currentTimestamp;
+            } else {
+                fake_alpha += delta_time * event.rotationRate.alpha * 0.001;
+                fake_beta += delta_time * event.rotationRate.beta * 0.001;
+                fake_gamma += delta_time * event.rotationRate.gamma * 0.001;
+            }
+            last_integral_time = currentTimestamp;
+        }
+
         if (currentTimestamp - lastMotionTimestamp >= fpsInterval) {
             lastMotionTimestamp = currentTimestamp;
 
@@ -110,14 +133,21 @@ document.addEventListener('DOMContentLoaded', function () {
                 z: event.accelerationIncludingGravity.z
             };
 
+            const fakeData = {
+                fake_alpha,
+                fake_beta,
+                fake_gamma
+            }
+
             const data = {
                 cmd: 'update_phone_acc',
                 param: {
                     gyro: gyroData,
-                    accel: accelData
+                    accel: accelData,
+                    fake: fakeData
                 }
             };
-
+            ws.emit('json_data', JSON.stringify(data))
         }
     }
 

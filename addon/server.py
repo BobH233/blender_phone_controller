@@ -8,6 +8,7 @@ from ws4py.server.wsgiutils import WebSocketWSGIApplication
 
 from .callbacks import cmd_callbacks
 import bpy
+import time
 
 wsserver = None
 sockets = []
@@ -55,6 +56,10 @@ def stop_server():
     for socket in sockets:
         socket.close()
     wsserver = None
+    try:
+        bpy.app.timers.unregister(update_timer)
+    except:
+        pass
     return True
 
 def parse_message_json(message):
@@ -71,6 +76,7 @@ def dispatch_cmd(msg_obj):
         callback(msg_obj)
     else:
         raise Exception(f'No callback for cmd {msg_obj["cmd"]}')
+
 
 def update_timer():
     msg_map = {}

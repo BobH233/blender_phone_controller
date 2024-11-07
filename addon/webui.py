@@ -8,7 +8,7 @@ from ws4py.client.threadedclient import WebSocketClient
 multiprocessing.set_start_method('spawn', force=True)
 
 app = Flask(__name__, static_folder='../webui', template_folder='../webui')
-socketio = SocketIO(app, cors_allowed_origins="*") 
+socketio = SocketIO(app, cors_allowed_origins='*') 
 
 ws_opened = False
 
@@ -24,7 +24,7 @@ class MyWebSocketClient(WebSocketClient):
         print('Connection closed, Code:', code, 'Reason:', reason)
 
     def received_message(self, message):
-        print('Received message:', message)
+        pass
 
 
 # 定义 index 路由
@@ -71,11 +71,11 @@ def handle_json_data(data):
 
 @socketio.on('connect')
 def handle_connect():
-    print("客户端已连接")
+    print('客户端已连接')
 
 @socketio.on('disconnect')
 def handle_disconnect():
-    print("客户端已断开连接")
+    print('客户端已断开连接')
 
 
 server_process = None

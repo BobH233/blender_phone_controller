@@ -7,6 +7,8 @@ from .utils import show_message_box, get_local_ip, generate_qr_code
 from .server import get_wsserver
 from .webui import start_server as start_web_server, stop_server as stop_web_server, is_running
 
+from .camera_control import start_camera_control, stop_camera_control, recovery_camera_pose, get_is_controlling_camera
+
 class BOBH_OT_start_websocket_server(bpy.types.Operator):
     bl_label = '启动Websocket服务'
     bl_idname = 'bobh.start_websocket_server'
@@ -87,4 +89,53 @@ class BOBH_OT_stop_webui_server(bpy.types.Operator):
             return {'CANCELLED'}
         show_message_box(message='服务器关闭成功', title='信息', icon='INFO')
         qr_icon_preview.clear()
+        return {'FINISHED'}
+
+def get_selecting_camera():
+    selected_objects = bpy.context.selected_objects
+    if len(selected_objects) == 1 and selected_objects[0].type == 'CAMERA':
+        return selected_objects[0]
+    return None
+
+class BOBH_OT_start_camera_control(bpy.types.Operator):
+    bl_label = '开始摄像机控制'
+    bl_idname = 'bobh.start_camera_control'
+
+    @classmethod
+    def poll(cls, context):
+        if get_selecting_camera() is None:
+            return False
+        return not get_is_controlling_camera()
+    
+    def execute(self, context):
+        target = get_selecting_camera()
+        start_camera_control(target)
+        return {'FINISHED'}
+
+class BOBH_OT_stop_camera_control(bpy.types.Operator):
+    bl_label = '停止摄像机控制'
+    bl_idname = 'bobh.stop_camera_control'
+
+    @classmethod
+    def poll(cls, context):
+        if get_selecting_camera() is None:
+            return False
+        return get_is_controlling_camera()
+    
+    def execute(self, context):
+        stop_camera_control()
+        return {'FINISHED'}
+    
+class BOBH_OT_reset_camera_pose(bpy.types.Operator):
+    bl_label = '重置摄像机姿态'
+    bl_idname = 'bobh.reset_camera_pose'
+    
+    @classmethod
+    def poll(cls, context):
+        if get_selecting_camera() is None:
+            return False
+        return not get_is_controlling_camera()
+
+    def execute(self, context):
+        recovery_camera_pose()
         return {'FINISHED'}
