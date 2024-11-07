@@ -27,6 +27,7 @@ def update_phone_pose_callback(msg):
     param = msg['param']
     if contains_none(param):
         print('Ignore Empty Message')
+    # TODO: 不要用这种物体获取方式，必须物体选中才行，用bpy.context.selected_objects
     if bpy.context.active_object:
         obj = bpy.context.active_object
         alpha = param['alpha']

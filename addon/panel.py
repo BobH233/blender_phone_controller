@@ -25,7 +25,6 @@ class BOBH_PT_main_panel(bpy.types.Panel):
         row.label(text='物体控制')
     
     def server_setting_sub_panel(self, context, layout):
-        qr_icon_preview = get_qr_icon_preview()
         scene = context.scene
 
         row = layout.row()
@@ -36,6 +35,11 @@ class BOBH_PT_main_panel(bpy.types.Panel):
         row.operator('bobh.start_websocket_server', text='启动WS服务')
         row = layout.row()
         row.operator('bobh.stop_websocket_server', text='关闭WS服务')
+
+    def control_input_web_sub_panel(self, context, layout):
+        qr_icon_preview = get_qr_icon_preview()
+        scene = context.scene
+        
         row = layout.row()
         row.prop(scene, 'default_web_port')
         row = layout.row()
@@ -48,19 +52,39 @@ class BOBH_PT_main_panel(bpy.types.Panel):
             row = layout.row()
             row.template_icon(icon_value=qr_icon_preview['qr_image'].icon_id, scale=6)
 
+    def control_input_app_sub_panel(self, context, layout):
+        row = layout.row()
+        row.label(text='app设定')
+
+    def control_input_joystick_sub_panel(self, context, layout):
+        row = layout.row()
+        row.label(text='手柄设定')
+
     def draw(self, context):
         layout = self.layout
         scene = context.scene
 
         box = layout.box()
         row = box.row()
-        row.label(text='服务器设置', icon='SHADING_WIRE')
+        row.label(text='根服务器设置', icon='SHADING_WIRE')
         self.server_setting_sub_panel(context, box)
-
 
         box = layout.box()
         row = box.row()
-        row.label(text='工作模式设定', icon='TOOL_SETTINGS')
+        row.label(text='控制输入设定', icon='FRAME_NEXT')
+        row = box.row()
+        row.prop(scene, 'input_control_option', expand=True)
+
+        if scene.input_control_option == 'WebSetting':
+            self.control_input_web_sub_panel(context, box)
+        elif scene.input_control_option == 'AppSetting':
+            self.control_input_app_sub_panel(context, box)
+        elif scene.input_control_option == 'JoystickSetting':
+            self.control_input_joystick_sub_panel(context, box)
+
+        box = layout.box()
+        row = box.row()
+        row.label(text='控制输出设定', icon='TOOL_SETTINGS')
         row = box.row()
         row.prop(scene, 'work_mode_option', expand=True)
 

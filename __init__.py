@@ -19,18 +19,18 @@ bl_info = {
 
 def register_string_props():
     bpy.types.Scene.default_ws_ip = bpy.props.StringProperty(
-        name='WS_IP',
-        description='ws服务器IP地址绑定',
+        name='根服务器IP',
+        description='根WebSocket服务器IP地址绑定',
         default='0.0.0.0'
     )
     bpy.types.Scene.default_ws_port = bpy.props.StringProperty(
-        name='WS_Port',
-        description='ws服务器端口绑定',
+        name='根服务器端口',
+        description='根WebSocket服务器端口绑定',
         default='8867'
     )
     bpy.types.Scene.default_web_port = bpy.props.StringProperty(
-        name='Web_Port',
-        description='web服务器端口绑定',
+        name='网页端端口',
+        description='Web服务器端口绑定',
         default='8863'
     )
 
@@ -52,12 +52,22 @@ def register_enum_props():
             ('ArmatureMode', '骨骼控制', '使用移动设备控制骨骼的旋转', 'OUTLINER_OB_ARMATURE', 1),
             ('ObjectMode', '物体', '使用移动设备控制骨骼的位姿', 'MATCUBE', 2),
         ],
-        default='CameraMode',
-        update=update_work_mode_option  # 选项更改时的回调函数
+        default='CameraMode'
+    )
+    bpy.types.Scene.input_control_option = bpy.props.EnumProperty(
+        name='输入模式设定',
+        description='设定插件的输入模式',
+        items=[
+            ('WebSetting', '网页端输入', '使用带陀螺仪的设备打开网页输入', 'SHADING_WIRE', 0),
+            ('AppSetting', 'APP输入', '使用指定APP采集数据输入', 'TOPBAR', 1),
+            ('JoystickSetting', '手柄输入', '将游戏手柄连接电脑输入', 'GHOST_ENABLED', 2),
+        ],
+        default='WebSetting'
     )
 
 def unregister_enum_props():
     del bpy.types.Scene.work_mode_option
+    del bpy.types.Scene.input_control_option
 
 def register():
     # 注册所有的 class 和属性
