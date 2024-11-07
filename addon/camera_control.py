@@ -50,18 +50,22 @@ def recovery_camera_pose():
     else:
         control_target.rotation_euler = camera_rot
 
+prev_q = None
 
 def set_camera_rotation(alpha, beta, gamma, orient):
+    global prev_q
     deg_to_rad = math.pi / 180.0
     alpha_rad = (alpha + orient) * deg_to_rad
     beta_rad = beta * deg_to_rad
     gamma_rad = gamma * deg_to_rad
     eul = Euler((beta_rad, gamma_rad, -alpha_rad), 'YXZ')
     q = eul.to_quaternion()
-
+    if prev_q and q.dot(prev_q) < 0:
+        q = -q
     control_target.rotation_mode = 'QUATERNION'
     q = q @ Quaternion((0, 0, 1), math.radians(-orient))
     control_target.rotation_quaternion = q
+    prev_q = q
 
 
 
