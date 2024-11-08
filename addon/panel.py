@@ -36,11 +36,11 @@ class BOBH_PT_main_panel(bpy.types.Panel):
         row = layout.row()
         row.operator('bobh.reset_camera_pose', text='重置摄像机姿态')
         row = layout.row()
-        row.prop(scene, 'record_camera_keyframe', text='录制摄像机关键帧')
+        row.prop(scene, 'record_camera_keyframe', text='录制摄像机关键帧', toggle=True, icon='DECORATE_KEYFRAME')
         row = layout.row()
         row.prop(scene, 'camera_control_orient', expand=False)
         row = layout.row()
-        row.prop(scene, "use_stabilizer_smoothing")
+        row.prop(scene, "use_stabilizer_smoothing", toggle=True, icon='SURFACE_NCIRCLE')
         if bpy.context.scene.use_stabilizer_smoothing:
             row = layout.row()
             row.prop(scene, "stabilizer_smoothing_strength")
