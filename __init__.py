@@ -86,7 +86,7 @@ def register_enum_props():
     bpy.types.Scene.stabilizer_smoothing_strength = bpy.props.FloatProperty(
         name="稳定强度",
         description="值越大摄像机越稳定",
-        default=0.1,
+        default=0.5,
         min=0.0,
         max=1.0
     )
