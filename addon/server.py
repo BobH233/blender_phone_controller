@@ -1,18 +1,23 @@
 import json
 import threading
 import queue
+import bpy
+import time
+from collections import deque
+
 from wsgiref.simple_server import make_server
 from ws4py.websocket import WebSocket as _WebSocket
 from ws4py.server.wsgirefserver import WSGIServer, WebSocketWSGIRequestHandler
 from ws4py.server.wsgiutils import WebSocketWSGIApplication
 
 from .callbacks import cmd_callbacks
-import bpy
-import time
 
 wsserver = None
 sockets = []
 message_queue = queue.Queue()
+
+latency_queue = deque(maxlen=20)
+current_latency_avg = 0
 
 class WebSocketApp(_WebSocket):
     def opened(self):
@@ -22,7 +27,17 @@ class WebSocketApp(_WebSocket):
         sockets.remove(self)
         
     def received_message(self, message):
-        message_queue.put(message.data.decode(message.encoding))
+        global latency_queue, current_latency_avg
+        payload = parse_message_json(message.data.decode(message.encoding))
+        timestamp = payload.get('timestamp')
+        if timestamp:
+            message_queue.put(payload)
+            current_latency = int(time.time() * 1000) - timestamp
+            latency_queue.append(current_latency)
+            current_latency_avg = 1.0 * sum(latency_queue) / len(latency_queue)
+
+def get_current_latency_avg():
+    return current_latency_avg
 
 def get_wsserver():
     global wsserver
@@ -83,8 +98,7 @@ def update_timer():
     while not message_queue.empty():
         try:
             msg = message_queue.get()
-            msg_obj = parse_message_json(msg)
-            msg_map[msg_obj['cmd']] = msg_obj
+            msg_map[msg['cmd']] = msg
         except Exception as e:
             print('message parse error', e)
     for msg_obj in msg_map.values():

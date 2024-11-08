@@ -141,6 +141,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const data = {
                 cmd: 'update_phone_acc',
+                timestamp: currentTimestamp,
                 param: {
                     gyro: gyroData,
                     accel: accelData,
@@ -164,6 +165,7 @@ document.addEventListener('DOMContentLoaded', function () {
             };
             const data = {
                 cmd: 'update_phone_pose',
+                timestamp: currentTimestamp,
                 param: orientationData
             };
             ws.emit('json_data', JSON.stringify(data))

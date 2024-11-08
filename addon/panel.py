@@ -3,6 +3,7 @@ try:
 except Exception as e:
     print('Warning: Not in blender env!')
 from .operators import get_qr_icon_preview
+from .server import get_current_latency_avg
 
 class BOBH_PT_main_panel(bpy.types.Panel):
     bl_space_type = 'VIEW_3D'
@@ -60,6 +61,9 @@ class BOBH_PT_main_panel(bpy.types.Panel):
         qr_icon_preview = get_qr_icon_preview()
         scene = context.scene
 
+
+        row = layout.row()
+        row.label(text='注意: 网页端不要多台设备连接, 只支持单设备', icon='ERROR')
         row = layout.row()
         row.prop(scene, 'default_web_port')
         row = layout.row()
@@ -88,6 +92,8 @@ class BOBH_PT_main_panel(bpy.types.Panel):
         row = box.row()
         row.label(text='根服务器设置', icon='SHADING_WIRE')
         self.server_setting_sub_panel(context, box)
+        row = box.row()
+        row.label(text=f'通信时间偏差: {get_current_latency_avg():.2f}ms', icon='TIME')
 
         box = layout.box()
         row = box.row()
