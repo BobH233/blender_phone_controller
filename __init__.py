@@ -77,6 +77,7 @@ def register_enum_props():
         default='Landscape_1'
     )
     bpy.types.Scene.record_camera_keyframe = bpy.props.BoolProperty(name="录制摄像机关键帧", default=False)
+    bpy.types.Scene.relative_pose_control_camera = bpy.props.BoolProperty(name="启用相机相对位姿控制", default=True)
     bpy.types.Scene.use_stabilizer_smoothing = bpy.props.BoolProperty(
         name="摄像机稳定器",
         description="是否启用摄像机稳定器平滑处理",
@@ -96,6 +97,7 @@ def unregister_enum_props():
     del bpy.types.Scene.input_control_option
     del bpy.types.Scene.camera_control_orient
     del bpy.types.Scene.record_camera_keyframe
+    del bpy.types.Scene.relative_pose_control_camera
     del bpy.types.Scene.use_stabilizer_smoothing
     del bpy.types.Scene.stabilizer_smoothing_strength
 

@@ -4,6 +4,7 @@ import bpy
 from mathutils import Euler, Matrix, Quaternion
 import time
 from collections import deque
+from .utils import show_message_box
 
 control_target: bpy.types.Object = None
 
@@ -11,13 +12,44 @@ is_controlling_camera = False
 
 initial_pose_when_starting = None
 
+phone_initial_quat = None
+camera_initial_quat = None
+
+
 def get_is_controlling_camera():
     return is_controlling_camera
+
+def record_initial_quat(camera):
+    # 相对位姿控制的起始参考点
+    global phone_initial_quat, camera_initial_quat
+    msg_latest = None
+    for msg in cache_dequeue:
+        if msg['cmd'] == 'update_phone_pose':
+            msg_latest = msg
+    if msg_latest is None:
+        return False
+    param = msg_latest['param']
+    alpha = param['alpha']
+    beta = param['beta']
+    gamma = param['gamma']
+    phone_initial_quat = get_camera_rotation_q(-alpha, beta, gamma, get_orient(), smooth=False, relative=False)
+    camera_rot_mode = camera.rotation_mode
+    if camera_rot_mode == 'QUATERNION':
+        camera_initial_quat = camera.rotation_quaternion.copy()
+    else:
+        camera_initial_quat = camera.rotation_euler.to_quaternion()
+    return True
+        
 
 """开始控制摄像机"""
 def start_camera_control(camera: bpy.types.Object):
     global initial_pose_when_starting, control_target, is_controlling_camera
+    
     if is_controlling_camera:
+        return
+    if (len(cache_dequeue) == 0) or (
+    not record_initial_quat(camera)):
+        show_message_box('未收到手机初始位姿, 无法开始控制', '无法控制摄像机', 'ERROR')
         return
     control_target = camera
     init_position = camera.location.copy()
@@ -32,8 +64,10 @@ def start_camera_control(camera: bpy.types.Object):
 
 """停止控制摄像机"""
 def stop_camera_control():
-    global is_controlling_camera, control_target
+    global is_controlling_camera, control_target, prev_q, prev_prev_q
     is_controlling_camera = False
+    prev_q = None
+    prev_prev_q = None
 
 
 """恢复摄像机在开始控制时的姿态"""
@@ -54,7 +88,7 @@ def recovery_camera_pose():
 prev_q = None
 prev_prev_q = None
 
-def get_camera_rotation_q(alpha, beta, gamma, orient):
+def get_camera_rotation_q(alpha, beta, gamma, orient, smooth=True, relative=True):
     global prev_q, prev_prev_q
     deg_to_rad = math.pi / 180.0
     alpha_rad = (alpha + orient) * deg_to_rad
@@ -65,7 +99,7 @@ def get_camera_rotation_q(alpha, beta, gamma, orient):
     q = q @ Quaternion((0, 0, 1), math.radians(-orient))
     if prev_q and q.dot(prev_q) < 0:
         q = -q
-    if bpy.context.scene.use_stabilizer_smoothing:
+    if bpy.context.scene.use_stabilizer_smoothing and smooth:
         smoothing_strength = 1 - bpy.context.scene.stabilizer_smoothing_strength
         
         if prev_q is not None and prev_prev_q is not None:
@@ -77,6 +111,11 @@ def get_camera_rotation_q(alpha, beta, gamma, orient):
         # 更新前两次的四元数状态
         prev_prev_q = prev_q.copy() if prev_q else q.copy()
         prev_q = q.copy()
+    
+    if bpy.context.scene.relative_pose_control_camera and relative:
+        relative_rot = phone_initial_quat.inverted() @ q
+        camera_now = camera_initial_quat @ relative_rot
+        return camera_now
     return q
 
 
