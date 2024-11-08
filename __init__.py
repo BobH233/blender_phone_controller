@@ -5,6 +5,7 @@ try:
     from .addon.webui import stop_server as stop_web_server
     from .addon.panel import BOBH_PT_main_panel
     from .addon.operators import BOBH_OT_start_websocket_server,    BOBH_OT_stop_websocket_server, BOBH_OT_start_webui_server, BOBH_OT_stop_webui_server, BOBH_OT_start_camera_control, BOBH_OT_stop_camera_control, BOBH_OT_reset_camera_pose
+    from .addon.camera_control import frame_change_handler as camera_control_frame_change_handler
     blender_env = True
 except Exception as e:
     print('Warning: Not in blender env!')
@@ -84,6 +85,13 @@ def unregister_enum_props():
     del bpy.types.Scene.camera_control_orient
     del bpy.types.Scene.record_camera_keyframe
 
+def register_blender_handlers():
+    bpy.app.handlers.frame_change_post.append(camera_control_frame_change_handler)
+
+def unregister_blender_handlers():
+    if camera_control_frame_change_handler in bpy.app.handlers.frame_change_post:
+        bpy.app.handlers.frame_change_post.remove(camera_control_frame_change_handler)
+
 if blender_env:
     my_classes = [
         BOBH_PT_main_panel,
@@ -102,6 +110,7 @@ def register():
         bpy.utils.register_class(cls)
     register_string_props()
     register_enum_props()
+    register_blender_handlers()
 
 def unregister():
     # 注销所有的 class 和属性
@@ -109,6 +118,7 @@ def unregister():
         bpy.utils.unregister_class(cls)
     unregister_string_props()
     unregister_enum_props()
+    unregister_blender_handlers()
     stop_ws_server()
     stop_web_server()
 

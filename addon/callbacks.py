@@ -21,20 +21,20 @@ def contains_none(data):
     
     return False
 
-def update_phone_pose_callback(msg):
+def update_phone_pose_callback(msg, reason):
     param = msg['param']
     if contains_none(param):
         print('Ignore Empty Message')
     if bpy.context.scene.work_mode_option == 'CameraMode':
-        camera_pose_msg_handler(param)
+        camera_pose_msg_handler(msg, reason)
 
 
-def update_phone_acc_callback(msg):
+def update_phone_acc_callback(msg, reason):
     param = msg['param']
     if contains_none(param):
         print('Ignore Empty Message')
     if bpy.context.scene.work_mode_option == 'CameraMode':
-        camera_acc_msg_handler(param)
+        camera_acc_msg_handler(msg, reason)
 
 cmd_callbacks = {
     'update_phone_acc': update_phone_acc_callback,

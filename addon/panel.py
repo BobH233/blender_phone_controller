@@ -4,6 +4,7 @@ except Exception as e:
     print('Warning: Not in blender env!')
 from .operators import get_qr_icon_preview
 from .server import get_current_latency_avg
+from .camera_control import get_controlling_camera, get_cache_dequeue_size
 
 class BOBH_PT_main_panel(bpy.types.Panel):
     bl_space_type = 'VIEW_3D'
@@ -21,8 +22,11 @@ class BOBH_PT_main_panel(bpy.types.Panel):
         row = layout.row()
         
         selected_objects = bpy.context.selected_objects
+        controlling_camera = get_controlling_camera()
         if len(selected_objects) == 1 and selected_objects[0].type == 'CAMERA':
             row.label(text=f'当前控制摄像机: {selected_objects[0].name}', icon='OUTLINER_OB_CAMERA')
+        elif controlling_camera:
+            row.label(text=f'当前控制摄像机: {controlling_camera.name}', icon='OUTLINER_OB_CAMERA')
         else:
             row.label(text=f'没有选中受控摄像机', icon='OUTLINER_OB_CAMERA')
 
@@ -94,6 +98,8 @@ class BOBH_PT_main_panel(bpy.types.Panel):
         self.server_setting_sub_panel(context, box)
         row = box.row()
         row.label(text=f'通信时间偏差: {get_current_latency_avg():.2f}ms', icon='TIME')
+        row = box.row()
+        row.label(text=f'姿态缓存队列大小: {get_cache_dequeue_size()}', icon='COLLAPSEMENU')
 
         box = layout.box()
         row = box.row()

@@ -7,7 +7,7 @@ from .utils import show_message_box, get_local_ip, generate_qr_code
 from .server import get_wsserver
 from .webui import start_server as start_web_server, stop_server as stop_web_server, is_running
 
-from .camera_control import start_camera_control, stop_camera_control, recovery_camera_pose, get_is_controlling_camera
+from .camera_control import start_camera_control, stop_camera_control, recovery_camera_pose, get_is_controlling_camera, get_controlling_camera
 
 import bpy.utils.previews
 
@@ -120,8 +120,6 @@ class BOBH_OT_stop_camera_control(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        if get_selecting_camera() is None:
-            return False
         return get_is_controlling_camera()
     
     def execute(self, context):
@@ -134,8 +132,6 @@ class BOBH_OT_reset_camera_pose(bpy.types.Operator):
     
     @classmethod
     def poll(cls, context):
-        if get_selecting_camera() is None:
-            return False
         return not get_is_controlling_camera()
 
     def execute(self, context):

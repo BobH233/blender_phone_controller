@@ -85,12 +85,14 @@ def parse_message_json(message):
         raise Exception('No param in json')
     return ret
 
-def dispatch_cmd(msg_obj):
+def dispatch_cmd(msg_obj, reason):
     callback = cmd_callbacks.get(msg_obj['cmd'])
     if callback:
-        callback(msg_obj)
+        callback(msg_obj, reason)
     else:
         raise Exception(f'No callback for cmd {msg_obj["cmd"]}')
+
+
 
 
 def update_timer():
@@ -99,8 +101,9 @@ def update_timer():
         try:
             msg = message_queue.get()
             msg_map[msg['cmd']] = msg
+            dispatch_cmd(msg, 'queue_msg')
         except Exception as e:
             print('message parse error', e)
     for msg_obj in msg_map.values():
-        dispatch_cmd(msg_obj)
+        dispatch_cmd(msg_obj, 'latest_msg')
     return 0.01
