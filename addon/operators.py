@@ -9,6 +9,8 @@ from .webui import start_server as start_web_server, stop_server as stop_web_ser
 
 from .camera_control import start_camera_control, stop_camera_control, recovery_camera_pose, get_is_controlling_camera
 
+import bpy.utils.previews
+
 class BOBH_OT_start_websocket_server(bpy.types.Operator):
     bl_label = '启动Websocket服务'
     bl_idname = 'bobh.start_websocket_server'
