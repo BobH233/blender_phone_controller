@@ -39,6 +39,11 @@ class BOBH_PT_main_panel(bpy.types.Panel):
         row.prop(scene, 'record_camera_keyframe', text='录制摄像机关键帧')
         row = layout.row()
         row.prop(scene, 'camera_control_orient', expand=False)
+        row = layout.row()
+        row.prop(scene, "use_stabilizer_smoothing")
+        if bpy.context.scene.use_stabilizer_smoothing:
+            row = layout.row()
+            row.prop(scene, "stabilizer_smoothing_strength")
 
 
     def armature_control_sub_panel(self, context, layout):

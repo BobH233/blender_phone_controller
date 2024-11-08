@@ -77,6 +77,18 @@ def register_enum_props():
         default='Landscape_1'
     )
     bpy.types.Scene.record_camera_keyframe = bpy.props.BoolProperty(name="录制摄像机关键帧", default=False)
+    bpy.types.Scene.use_stabilizer_smoothing = bpy.props.BoolProperty(
+        name="摄像机稳定器",
+        description="是否启用摄像机稳定器平滑处理",
+        default=False
+    )
+    bpy.types.Scene.stabilizer_smoothing_strength = bpy.props.FloatProperty(
+        name="稳定强度",
+        description="值越大摄像机越稳定",
+        default=0.1,
+        min=0.0,
+        max=1.0
+    )
 
 
 def unregister_enum_props():
@@ -84,6 +96,8 @@ def unregister_enum_props():
     del bpy.types.Scene.input_control_option
     del bpy.types.Scene.camera_control_orient
     del bpy.types.Scene.record_camera_keyframe
+    del bpy.types.Scene.use_stabilizer_smoothing
+    del bpy.types.Scene.stabilizer_smoothing_strength
 
 def register_blender_handlers():
     bpy.app.handlers.frame_change_post.append(camera_control_frame_change_handler)

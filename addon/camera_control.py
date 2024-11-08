@@ -52,9 +52,10 @@ def recovery_camera_pose():
         control_target.rotation_quaternion = camera_rot.to_quaternion()
 
 prev_q = None
+prev_prev_q = None
 
 def get_camera_rotation_q(alpha, beta, gamma, orient):
-    global prev_q
+    global prev_q, prev_prev_q
     deg_to_rad = math.pi / 180.0
     alpha_rad = (alpha + orient) * deg_to_rad
     beta_rad = beta * deg_to_rad
@@ -64,6 +65,18 @@ def get_camera_rotation_q(alpha, beta, gamma, orient):
     q = q @ Quaternion((0, 0, 1), math.radians(-orient))
     if prev_q and q.dot(prev_q) < 0:
         q = -q
+    if bpy.context.scene.use_stabilizer_smoothing:
+        smoothing_strength = 1 - bpy.context.scene.stabilizer_smoothing_strength
+        
+        if prev_q is not None and prev_prev_q is not None:
+            # 双重指数平滑
+            smoothed_q = prev_q.slerp(q, smoothing_strength)
+            doubly_smoothed_q = prev_prev_q.slerp(smoothed_q, smoothing_strength)
+            q = doubly_smoothed_q
+        
+        # 更新前两次的四元数状态
+        prev_prev_q = prev_q.copy() if prev_q else q.copy()
+        prev_q = q.copy()
     return q
 
 
