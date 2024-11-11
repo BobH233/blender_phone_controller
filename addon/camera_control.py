@@ -1,7 +1,7 @@
 import bpy
 import math
 import bpy
-from mathutils import Euler, Matrix, Quaternion
+from mathutils import Euler, Matrix, Quaternion, Vector
 import time
 from collections import deque
 from .utils import show_message_box
@@ -32,7 +32,7 @@ def record_initial_quat(camera):
     alpha = param['alpha']
     beta = param['beta']
     gamma = param['gamma']
-    phone_initial_quat = get_camera_rotation_q(-alpha, beta, gamma, get_orient(), smooth=False, relative=False)
+    phone_initial_quat = get_camera_rotation_q_raw(-alpha, beta, gamma, get_orient())
     camera_rot_mode = camera.rotation_mode
     if camera_rot_mode == 'QUATERNION':
         camera_initial_quat = camera.rotation_quaternion.copy()
@@ -88,7 +88,8 @@ def recovery_camera_pose():
 prev_q = None
 prev_prev_q = None
 
-def get_camera_rotation_q(alpha, beta, gamma, orient, smooth=True, relative=True):
+
+def get_camera_rotation_q_raw(alpha, beta, gamma, orient):
     global prev_q, prev_prev_q
     deg_to_rad = math.pi / 180.0
     alpha_rad = (alpha + orient) * deg_to_rad
@@ -99,7 +100,13 @@ def get_camera_rotation_q(alpha, beta, gamma, orient, smooth=True, relative=True
     q = q @ Quaternion((0, 0, 1), math.radians(-orient))
     if prev_q and q.dot(prev_q) < 0:
         q = -q
-    if bpy.context.scene.use_stabilizer_smoothing and smooth:
+    return q
+
+def get_camera_rotation_q_postprocessed(alpha, beta, gamma, orient):
+    global prev_q, prev_prev_q
+    q = get_camera_rotation_q_raw(alpha, beta, gamma, orient)
+
+    if bpy.context.scene.use_stabilizer_smoothing:
         smoothing_strength = 1 - bpy.context.scene.stabilizer_smoothing_strength
         
         if prev_q is not None and prev_prev_q is not None:
@@ -112,7 +119,24 @@ def get_camera_rotation_q(alpha, beta, gamma, orient, smooth=True, relative=True
         prev_prev_q = prev_q.copy() if prev_q else q.copy()
         prev_q = q.copy()
     
-    if bpy.context.scene.relative_pose_control_camera and relative:
+    
+    if bpy.context.scene.lock_camera_z_axis:
+        current_quat = q.copy()
+        forward_vector = current_quat @ Vector((0.0, 0.0, -1.0))
+        world_up = Vector((0.0, 0.0, 1.0))
+        right_vector = forward_vector.cross(world_up).normalized()
+        up_vector = right_vector.cross(forward_vector).normalized()
+        rotation_matrix = Matrix((
+            right_vector,
+            up_vector,
+            -forward_vector  # 注意这里是负的 forward_vector
+        )).transposed()
+        new_quat = rotation_matrix.to_quaternion()
+        desired_roll = 0.0  # 将滚动角度设为 0 消除滚动
+        roll_quat = Quaternion(forward_vector, math.radians(desired_roll))
+        q = roll_quat @ new_quat
+
+    if bpy.context.scene.relative_pose_control_camera:
         relative_rot = phone_initial_quat.inverted() @ q
         camera_now = camera_initial_quat @ relative_rot
         return camera_now
@@ -226,7 +250,7 @@ def frame_change_handler(scene):
     beta = true_frame['param']['beta']
     gamma = true_frame['param']['gamma']
     
-    q = get_camera_rotation_q(-alpha, beta, gamma, get_orient())
+    q = get_camera_rotation_q_postprocessed(-alpha, beta, gamma, get_orient())
     set_rotation_quaternion_keyframe(control_target, current_frame, q)
 
 
@@ -254,7 +278,7 @@ def pose_msg_handler(msg, reason):
         beta = param['beta']
         gamma = param['gamma']
         
-        q = get_camera_rotation_q(-alpha, beta, gamma, get_orient())
+        q = get_camera_rotation_q_postprocessed(-alpha, beta, gamma, get_orient())
         control_target.rotation_mode = 'QUATERNION'
         control_target.rotation_quaternion = q
 

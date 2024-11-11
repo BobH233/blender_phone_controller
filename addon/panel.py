@@ -43,8 +43,10 @@ class BOBH_PT_main_panel(bpy.types.Panel):
         row = layout.row()
         row.prop(scene, "use_stabilizer_smoothing", toggle=True, icon='SURFACE_NCIRCLE')
         if bpy.context.scene.use_stabilizer_smoothing:
-            row = layout.row()
             row.prop(scene, "stabilizer_smoothing_strength")
+        row = layout.row()
+        row.label(text='旋转轴锁定: ')
+        row.prop(scene, "lock_camera_z_axis", toggle=True, icon='EMPTY_AXIS', text='Z轴锁定')
 
 
     def armature_control_sub_panel(self, context, layout):

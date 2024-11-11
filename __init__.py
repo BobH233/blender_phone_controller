@@ -90,6 +90,11 @@ def register_enum_props():
         min=0.0,
         max=1.0
     )
+    bpy.types.Scene.lock_camera_z_axis = bpy.props.BoolProperty(
+        name="锁定摄像机z轴",
+        description="控制时锁定z轴不变",
+        default=False
+    )
 
 
 def unregister_enum_props():
@@ -100,6 +105,7 @@ def unregister_enum_props():
     del bpy.types.Scene.relative_pose_control_camera
     del bpy.types.Scene.use_stabilizer_smoothing
     del bpy.types.Scene.stabilizer_smoothing_strength
+    del bpy.types.Scene.lock_camera_z_axis
 
 def register_blender_handlers():
     bpy.app.handlers.frame_change_post.append(camera_control_frame_change_handler)
