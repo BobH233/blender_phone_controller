@@ -45,6 +45,9 @@ def record_initial_quat(camera):
 def start_camera_control(camera: bpy.types.Object):
     global initial_pose_when_starting, control_target, is_controlling_camera
     
+    if frame_change_handler not in bpy.app.handlers.frame_change_post:
+        bpy.app.handlers.frame_change_post.append(frame_change_handler)
+
     if is_controlling_camera:
         return
     if (len(cache_dequeue) == 0) or (
